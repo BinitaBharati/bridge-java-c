@@ -24,7 +24,7 @@ public class App3 {
         int totalKeys = Integer.parseInt(args[0]);
         long sleepMinutes = Long.parseLong(args[1]);
         int minKey = Integer.parseInt(args[2]);
-        int maxKey = Integer.parseInt(args[3]);
+        int maxKey = minKey + 2 * (totalKeys - 1);
         String jniLibRef = "_jni_ts_hashmap";//actual libname = lib_jni_ts_hashmap.so
         NativeHashMap nativeHashMap = new NativeHashMap(jniLibRef);
         nativeHashMap.init_hash_table();

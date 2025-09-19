@@ -68,41 +68,21 @@ public class NativeHashMapFFI {
 
     public static void insert(int key, String value) throws Throwable {
         try (Arena arena = Arena.ofConfined()) {
-            //MemorySegment cStr = arena.allocateUtf8String(value);//jdk21
             MemorySegment cStr = arena.allocateFrom(value);//jdk 22 onwards
             insertToHashTable.invoke(key, cStr);
         }
     }
 
-    /*public static String lookup(int key) throws Throwable {
-        MemorySegment ptr = (MemorySegment) hashTableLookUp.invoke(key);
-        if (ptr == null || ptr.address() == 0) {
-            return null; // no entry
-        }
-        MemorySegment zeroLen = MemorySegment.ofAddress(ptr.address());
-        MemorySegment stringSeg = zeroLen.reinterpret(
-                100);
-        String retVal =  stringSeg.getUtf8String(0);
-        if (ptr != null) {
-            freeMemoryUsedByReturnedName.invoke(ptr);
-        }
-        return retVal;
-    }*/
-
     public static String lookup(int key) throws Throwable {
         MemorySegment ptr = (MemorySegment) hashTableLookUp.invoke(key);
-        /*if (ptr == null || ptr.address() == 0) {
-            return null; // no entry
-        }*/
+
         if (ptr == null || ptr.equals(MemorySegment.NULL)) {
             return null;
         }
 
-        // reinterpret with a max length guess
-        //MemorySegment stringSeg = ptr.reinterpret(100);
-
+        String retVal = ptr.reinterpret(Long.MAX_VALUE)//expected length of string passed from C.
+                .getString(0, StandardCharsets.UTF_8);
         // ✅ new API
-        String retVal = ptr.getString(0, StandardCharsets.UTF_8);
         log.info("key = {}, retVal = {}",key, retVal);
 
         if (ptr != null) {
@@ -115,11 +95,4 @@ public class NativeHashMapFFI {
         int result = (int) deleteKeyFromHashtable.invoke(key);
         return result != 0;
     }
-
-    /*public static void freeMemory(String value) throws Throwable {
-        try (Arena arena = Arena.ofConfined()) {
-            MemorySegment cStr = arena.allocateUtf8String(value);
-            freeMemoryUsedByReturnedName.invoke(cStr);
-        }
-    }*/
 }
