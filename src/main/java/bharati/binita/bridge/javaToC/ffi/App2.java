@@ -17,12 +17,13 @@ public class App2 {
     private static Random r = new Random();
     private static ExecutorService readerTPool = Executors.newFixedThreadPool(5);
 
-
     public static void main(String[] args) throws Throwable {
 
         int totalKeys = Integer.parseInt(args[0]);
         long sleepMinutes = Long.parseLong(args[1]);
         int minKey = Integer.parseInt(args[2]);
+        boolean isJeMallocEnabled = Boolean.parseBoolean(args[3]);
+
         int maxKey = minKey + 2 * (totalKeys - 1);
         NativeHashMapFFI nativeHashMap = new NativeHashMapFFI("ffi_ts_hashmap");
         nativeHashMap.init();
@@ -33,6 +34,10 @@ public class App2 {
         for (int i = 0 ; i < 5 ; i++){
             readerTPool.submit(new HashMapReaderThread(nativeHashMap, minKey, maxKey));
         }
+
+        NativeMemoryMonitorFFI nativeMemoryMonitorFFI = new NativeMemoryMonitorFFI("native_memory_usage_tracker");
+        Thread nativeMemoryUsageTrackerThread = new Thread(new NativeMemoryUsageTrackerThread(nativeMemoryMonitorFFI,isJeMallocEnabled));
+        nativeMemoryUsageTrackerThread.start();
 
         /**
          * Writer is single threaded. Writer keeps writing while multiple reader threads keep reading.

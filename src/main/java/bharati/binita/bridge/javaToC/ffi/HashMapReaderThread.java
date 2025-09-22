@@ -25,7 +25,6 @@ public class HashMapReaderThread implements Runnable{
         this.max = maxKey;
     }
 
-
     @Override
     public void run() {
         while (true) {
@@ -39,7 +38,6 @@ public class HashMapReaderThread implements Runnable{
             catch (Throwable t) {
                 log.error("Oppsy",t);
             }
-
         }
     }
 }
