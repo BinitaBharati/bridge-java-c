@@ -17,7 +17,6 @@ public class JVMPauseDetectorThread implements Runnable{
                 log.info("Thread pause detected! Pause in ms = {}" ,diff / 1_000_000.0);
             }
             lastTime = now;
-
         }
     }
 }

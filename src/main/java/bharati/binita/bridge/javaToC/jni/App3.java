@@ -8,7 +8,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Main app that calls thread safe implementation of JNI HashMap.
+ * Main app to that calls thread safe implementation of FFI HashMap.
  * Multiple, concurrent reader threads and a single threaded writer.
  */
 
@@ -25,7 +25,14 @@ public class App3 {
         long sleepMinutes = Long.parseLong(args[1]);
         int minKey = Integer.parseInt(args[2]);
         int maxKey = minKey + 2 * (totalKeys - 1);
-        String jniLibRef = "_jni_ts_hashmap";//actual libname = lib_jni_ts_hashmap.so
+        boolean isJeMallocEnabled = Boolean.parseBoolean(args[3]);
+
+        NativeMemoryMonitorJNI nativeMemoryMonitorJNI = new NativeMemoryMonitorJNI("native_memory_usage_tracker_jni");//actual libname = libnative_memory_usage_tracker_jni.so
+        Thread nativeMemoryUsageTrackerThread = new Thread(new NativeMemoryUsageTrackerThread(nativeMemoryMonitorJNI, isJeMallocEnabled));
+        nativeMemoryUsageTrackerThread.start();
+
+
+        String jniLibRef = "jni_ts2_hashmap";//actual libname = lijni_ts2_hashmap.so
         NativeHashMap nativeHashMap = new NativeHashMap(jniLibRef);
         nativeHashMap.init_hash_table();
 

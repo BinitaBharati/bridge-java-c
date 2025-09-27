@@ -21,5 +21,6 @@ public class NativeHashMap {
     native public void init_hash_table();
     native public void insert_to_hash_table(int key, String valueName);
     native public String hash_table_look_up(int key);
+    native public void free_string(String returnedNameFromLookUp);
     native public boolean delete_key_fromhashtable(int key);
 }
