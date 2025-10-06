@@ -26,7 +26,10 @@ public class CacheUpdater implements Runnable {
                     String phone = Util.generateUSPhoneNumber(Util.MAX_PHONE_CHARS);
                     String email = Util.generateRandomEmail(Util.MAX_EMAIL_CHARS);
                     log.info("CacheUpdater: custId = {}, update phone = {}, updated email = {}", custId, phone, email);
+                    long st = System.nanoTime();
                     this.cacheService.updateBasicCustomerInfo(custId, phone, email);
+                    long et = System.nanoTime();
+                    log.info("Update time = {}",(et-st)/1000000);
                 }
                 Thread.sleep(1 * 1000);
             } catch (Throwable t) {

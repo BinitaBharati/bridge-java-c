@@ -45,14 +45,19 @@ public class App {
         }
 
         //populateCache
+        long st = System.nanoTime();
         log.info("started loading all customers");
         for (int i = 1 ; i <= Util.MAX_CACHE_ENTRIES ; i++) {
             cacheService.onboardCustomer(i,Util.generateRandomString(Util.MAX_NAME_CHARS),Util.generateRandomString(Util.MAX_NAME_CHARS),Util.generateUSPhoneNumber(Util.MAX_PHONE_CHARS),
                                          Util.generateRandomEmail(Util.MAX_EMAIL_CHARS),Util.NOT_THREAD_SAFE_RANDOM.nextDouble(1000, 100000000));
-            if (i % 1000 == 0) {
+            /*if (i % 1000 == 0) {
                 log.info("Finished loading {} customers",i);
-            }
+            }*/
+
+
         }
+        long et = System.nanoTime();
+        log.info("Loading time in millis = {}",(et-st)/1000000);//112 secs for ffi, 78 secs for pure
         log.info("finished loading all customers");
         //update populated basic customer info
         for (int i = 0 ; i < 5 ; i++) {

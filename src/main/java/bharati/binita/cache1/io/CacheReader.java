@@ -24,7 +24,10 @@ public class CacheReader implements Runnable {
             try {
                 for (int i = 0 ; i < Util.READ_UPDATE_CUST_IDS.length ; i++) {
                     int custId = Util.READ_UPDATE_CUST_IDS[i];
+                    long st = System.nanoTime();
                     String custInfo = this.cacheService.getBasicCustomerInfo(custId);
+                    long et = System.nanoTime();
+                    log.info("Lookup time = {}",(et-st)/1000000);
                     log.info("custId = {}, custInfo = {}",custId, custInfo);
                 }
 

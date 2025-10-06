@@ -17,7 +17,7 @@ public class CacheServiceImpl implements CacheService {
 
     @Override
     public void initCache() {
-        this.custIdToCustomerInfoMap = new ConcurrentHashMap<>();
+        this.custIdToCustomerInfoMap = new ConcurrentHashMap<>(Util.MAX_CACHE_ENTRIES);
     }
 
     @Override
