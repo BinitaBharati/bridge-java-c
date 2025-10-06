@@ -15,6 +15,9 @@ public class FFICacheServiceImpl implements CacheService {
     private static  MethodHandle initHashTable;
     private static  MethodHandle onboardCustomer;
     private static  MethodHandle getBasicCacheEntry;
+    private static  MethodHandle updateBasicCustomerInfo;
+
+
 
 
     public FFICacheServiceImpl(String sharedLibRef) {
@@ -42,6 +45,15 @@ public class FFICacheServiceImpl implements CacheService {
                     FunctionDescriptor.ofVoid(
                             ValueLayout.JAVA_INT,               // custId
                             ValueLayout.ADDRESS                 // returnJsonBasicInfo
+                    )
+            );
+
+            updateBasicCustomerInfo  = linker.downcallHandle(
+                    lookup.find("updateBasicCustomerInfo").orElseThrow(),
+                    FunctionDescriptor.ofVoid(
+                            ValueLayout.JAVA_INT,               // custId
+                            ValueLayout.ADDRESS,                // phone
+                            ValueLayout.ADDRESS                 // email
                     )
             );
         }
@@ -90,6 +102,29 @@ public class FFICacheServiceImpl implements CacheService {
                 length++;
             }
             return new String(bytes, 0, length, StandardCharsets.UTF_8);
+        }
+    }
+
+    @Override
+    public void updateBasicCustomerInfo(int custId, String phone, String email) throws Throwable {
+        /**
+         * The memory for cPhone and cEmail is owned by the arena you created (Arena.ofConfined()).
+         *
+         * When the try block ends,
+         * the arena is automatically closed (AutoCloseable).
+         *
+         * When an arena is closed, it deallocates all memory segments it allocated.
+         *
+         * So the memory for cPhone and cEmail is freed automatically at the end of the try block.
+         */
+        try (Arena arena = Arena.ofConfined()) {
+            // Allocate C strings in native memory (UTF-8 null-terminated)
+            MemorySegment cPhone = arena.allocateFrom(phone);
+            MemorySegment cEmail = arena.allocateFrom(email);
+            // Call native function
+            updateBasicCustomerInfo.invokeExact(
+                    custId, cPhone, cEmail
+            );
         }
     }
 }

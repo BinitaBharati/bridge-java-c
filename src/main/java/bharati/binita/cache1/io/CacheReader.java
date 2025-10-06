@@ -12,7 +12,7 @@ public class CacheReader implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(CacheReader.class);
 
     private CacheService cacheService;
-    private static ThreadLocalRandom random = ThreadLocalRandom.current();
+    private static ThreadLocalRandom random = ThreadLocalRandom.current();//multiple reader threads are there
 
     public CacheReader(CacheService cacheService) {
         this.cacheService = cacheService;
@@ -22,9 +22,12 @@ public class CacheReader implements Runnable {
     public void run() {
         while (true) {
             try {
-                int custId = random.nextInt(1, Util.MAX_CACHE_ENTRIES);
-                String custInfo = this.cacheService.getBasicCustomerInfo(custId);
-                log.info("custId = {}, custInfo = {}",custId, custInfo);
+                for (int i = 0 ; i < Util.READ_UPDATE_CUST_IDS.length ; i++) {
+                    int custId = Util.READ_UPDATE_CUST_IDS[i];
+                    String custInfo = this.cacheService.getBasicCustomerInfo(custId);
+                    log.info("custId = {}, custInfo = {}",custId, custInfo);
+                }
+
                 Thread.sleep(1*1000);
             } catch (Throwable e) {
                 throw new RuntimeException(e);

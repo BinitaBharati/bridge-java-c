@@ -14,6 +14,7 @@ public class Util {
     public static int MAX_NAME_CHARS = 10;
     public static int MAX_PHONE_CHARS = 20;
     public static int MAX_EMAIL_CHARS = 20;
+    public static int[] READ_UPDATE_CUST_IDS = {10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000};
 
     public static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public static int CREDIT_TRXN_TYPE = 1;

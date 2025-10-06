@@ -20,6 +20,7 @@ public class CacheServiceImpl implements CacheService {
         this.custIdToCustomerInfoMap = new ConcurrentHashMap<>();
     }
 
+    @Override
     public void onboardCustomer(int custId, String firstName, String lastName,
                                 String phone, String email, double balance) throws Throwable {
 
@@ -32,7 +33,33 @@ public class CacheServiceImpl implements CacheService {
 
         customerInfo.setBalance(balance);
 
-        custIdToCustomerInfoMap.put(custId, customerInfo);
+        custIdToCustomerInfoMap.put(custId, customerInfo);//this first time onboarding, done in single thread.
+    }
+
+    @Override
+    public void updateBasicCustomerInfo(int custId, String phone, String email) throws Throwable {
+
+        custIdToCustomerInfoMap.computeIfPresent(custId, (id, customerInfo) -> {//thread safe update.
+            customerInfo.setHomePhone(phone);
+            customerInfo.setHomeEmail(email);// safe update
+            return customerInfo;
+        });
+    }
+
+    @Override
+    /*
+    This method will get basic info for a onboarded customer.
+     */
+    public String getBasicCustomerInfo(int cacheKey) throws Throwable {
+        CustomerInfo customerInfo = custIdToCustomerInfoMap != null ? custIdToCustomerInfoMap.get(cacheKey) : null;
+        if (customerInfo != null) {
+            try {
+                return Util.OBJECT_MAPPER.writeValueAsString(customerInfo);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return null;
     }
 
     //@Override
@@ -65,22 +92,6 @@ public class CacheServiceImpl implements CacheService {
             }
             customerInfo.addTransactionDetails(trxn);
         }
-    }
-
-    @Override
-    /*
-    This method will get basic info for a onboarded customer.
-     */
-    public String getBasicCustomerInfo(int cacheKey) throws Throwable {
-        CustomerInfo customerInfo = custIdToCustomerInfoMap != null ? custIdToCustomerInfoMap.get(cacheKey) : null;
-        if (customerInfo != null) {
-            try {
-                return Util.OBJECT_MAPPER.writeValueAsString(customerInfo);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return null;
     }
 
     //@Override
