@@ -16,13 +16,17 @@ import java.util.concurrent.Executors;
 public class App {
 
     private static final Logger log = LoggerFactory.getLogger(App.class);
-    private static ExecutorService readerTPool = Executors.newFixedThreadPool(5);
-    private static ExecutorService updaterTPool = Executors.newFixedThreadPool(5);
+    private static ExecutorService readerTPool ;
+    private static ExecutorService updaterTPool ;
 
 
     public static void main(String[] args) throws Throwable {
         log.info("started123");
         String implType = args[0];
+
+        readerTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]));
+        updaterTPool = Executors.newFixedThreadPool(Integer.parseInt(args[2]));
+
         CacheService cacheService = null;
         log.info("implyTYpe = {}", implType);
 
