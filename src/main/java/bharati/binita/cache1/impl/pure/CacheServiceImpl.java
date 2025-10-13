@@ -6,6 +6,7 @@ import bharati.binita.cache1.model.TransactionDetails;
 import bharati.binita.cache1.util.Util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import java.lang.foreign.MemorySegment;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -62,7 +63,7 @@ public class CacheServiceImpl implements CacheService {
         return null;
     }
 
-    @Override
+    //@Override
     public void addTransactionEntry(int custId, long opDate, int opType, double amount) throws Throwable {
         if (custIdToCustomerInfoMap.get(custId) != null) {
             CustomerInfo customerInfo = custIdToCustomerInfoMap.get(custId);
@@ -91,11 +92,10 @@ public class CacheServiceImpl implements CacheService {
         }
     }
 
-    @Override
-    public String getLatestTrxnsForCustomer(int custId) {
+    //@Override
+    public String getLatestTrxnsForCustomer(int custId, MemorySegment buffer) {
         if (custIdToCustomerInfoMap.get(custId) != null) {
             CustomerInfo customerInfo = custIdToCustomerInfoMap.get(custId);
-
         }
         return null;
     }

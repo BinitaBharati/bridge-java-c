@@ -74,13 +74,4 @@ public class OffHeapCacheServiceImpl implements CacheService {
         }
     }
 
-    @Override
-    public void addTransactionEntry(int custId, long trxnDate, int opType, double amount) throws Throwable {
-
-    }
-
-    @Override
-    public String getLatestTrxnsForCustomer(int custId) {
-        return "";
-    }
 }
