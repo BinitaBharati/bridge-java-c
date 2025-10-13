@@ -5,8 +5,13 @@ import bharati.binita.cache1.model.TransactionDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Util {
 
@@ -17,13 +22,15 @@ public class Util {
     public static int[] READ_UPDATE_CUST_IDS = {10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000};
 
     public static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    public static int CREDIT_TRXN_TYPE = 1;
-    public static int DEBIT_TRXN_TYPE = 2;
+    public static int CREDIT_TRXN_TYPE = 0;
+    public static int DEBIT_TRXN_TYPE = 1;
     public static final int MAX_CACHE_ENTRIES = 100000000;
+    public static final int BATCH_COUNT = 4;
     public static Random NOT_THREAD_SAFE_RANDOM = new Random();
-
-
-
+    public static Random THREAD_SAFE_RANDOM = ThreadLocalRandom.current();
+    public static final DateTimeFormatter FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                    .withZone(ZoneId.systemDefault());
 
     private static final String EMAIL_CHARSET = "abcdefghijklmnopqrstuvwxyz0123456789";
     private static final String[] DOMAINS = {
@@ -31,8 +38,8 @@ public class Util {
     };
 
     private static final String ALPHABET_CHARSET = "abcdefghijklmnopqrstuvwxyz";
-    private static final int START_YEAR = 2020;
-    private static final int END_YEAR = 2025;
+    private static final String START_TIME = "2020-01-01 00:00:00";
+    private static final String END_TIME = "2025-01-01 00:00:00";
 
     public static String generateRandomString(int length) {
         StringBuilder sb = new StringBuilder(length);
@@ -88,32 +95,43 @@ public class Util {
         return phone;
     }
 
-    public static TransactionDetails addTransactionEntry(CustomerInfo customerInfo) {
-        TransactionDetails trxn = new TransactionDetails();
-        trxn.setTrxnDate(generateRandomDate());
-        if (NOT_THREAD_SAFE_RANDOM.nextBoolean()) {
-            trxn.setCredit(NOT_THREAD_SAFE_RANDOM.nextDouble(100, 100000000));
-            trxn.setBalance(trxn.getCredit() + customerInfo.getBalance());
-            customerInfo.setBalance(trxn.getBalance());
-        }
-        else {
-            trxn.setDebit(NOT_THREAD_SAFE_RANDOM.nextDouble(0, customerInfo.getBalance()));
-            trxn.setBalance(customerInfo.getBalance() - trxn.getDebit());
-            customerInfo.setBalance(trxn.getBalance());
-        }
-        return trxn;
+    public static long randomTimestampWithinOneDay(LocalDateTime inputDate) {
+        // Parse input date string
+        //LocalDateTime dateTime = LocalDateTime.parse(inputDate, formatter);
+        ZoneId zone = ZoneId.systemDefault();
+
+        long baseMillis = inputDate.atZone(zone).toInstant().toEpochMilli();
+        long oneDayMillis = 24L * 60 * 60 * 1000;
+
+        // Random offset between 0 and +1 day
+        long randomOffset = ThreadLocalRandom.current().nextLong(0, oneDayMillis + 1);
+
+        return baseMillis + randomOffset;
     }
 
-    public static String generateRandomDate() {
-        // Start and end dates
-        LocalDate start = LocalDate.of(START_YEAR, 1, 1);
-        LocalDate end = LocalDate.of(END_YEAR, 12, 31);
+    /*
+    Returns a map of batch start customer id to batch end customer id.
+     */
+    public static Map<Integer, Integer> divideCustomersIntoBatches(int totalCustomers, int batchCount) {
+        Map<Integer, Integer> batchStartToBatchEndMap = new HashMap<>();
+        int batches = 5;
 
-        // Random epoch day between start and end
-        long randomDay = NOT_THREAD_SAFE_RANDOM.nextLong(start.toEpochDay(), end.toEpochDay() + 1);
+        int batchSize = totalCustomers / batchCount;
+        int remainder = totalCustomers % batchCount;
 
-        LocalDate randomDate = LocalDate.ofEpochDay(randomDay);
-        return randomDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        int start = 1;
+        for (int i = 1; i <= batchCount; i++) {
+            int end = start + batchSize - 1;
+
+            // Distribute remainder (if total isn’t perfectly divisible)
+            if (i == batches) {
+                end += remainder;
+            }
+            batchStartToBatchEndMap.put(start, end);
+            start = end + 1;
+        }
+        return batchStartToBatchEndMap;
     }
+
 
 }

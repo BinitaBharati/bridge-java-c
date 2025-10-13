@@ -1,5 +1,11 @@
 package bharati.binita.cache1.model;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+
+import java.time.Instant;
+
+import static bharati.binita.cache1.util.Util.FORMATTER;
+
 public class TransactionDetails {
 
     private String trxnDate;
@@ -11,8 +17,9 @@ public class TransactionDetails {
         return trxnDate;
     }
 
-    public void setTrxnDate(String trxnDate) {
-        this.trxnDate = trxnDate;
+    @JsonSetter("trxnDate")
+    public void setTrxnDate(long epochMillis) {
+        this.trxnDate = FORMATTER.format(Instant.ofEpochMilli(epochMillis));
     }
 
     public double getCredit() {
@@ -37,5 +44,15 @@ public class TransactionDetails {
 
     public void setBalance(double balance) {
         this.balance = balance;
+    }
+
+    @Override
+    public String toString() {
+        return "TransactionDetails{" +
+                "trxnDate='" + trxnDate + '\'' +
+                ", credit=" + credit +
+                ", debit=" + debit +
+                ", balance=" + balance +
+                '}';
     }
 }

@@ -62,29 +62,26 @@ public class CacheServiceImpl implements CacheService {
         return null;
     }
 
-    //@Override
-    /*
-    This method will add transactions for an onboarded customer.
-     */
-    public void updateCacheEntry(int cacheKey, int opType, String opDate, double opValue) {
-        if (custIdToCustomerInfoMap.get(cacheKey) != null) {
-            CustomerInfo customerInfo = custIdToCustomerInfoMap.get(cacheKey);
+    @Override
+    public void addTransactionEntry(int custId, long opDate, int opType, double amount) throws Throwable {
+        if (custIdToCustomerInfoMap.get(custId) != null) {
+            CustomerInfo customerInfo = custIdToCustomerInfoMap.get(custId);
 
             TransactionDetails trxn = new TransactionDetails();
             trxn.setTrxnDate(opDate);
 
             if (opType == Util.CREDIT_TRXN_TYPE) {
-                trxn.setCredit(opValue);
+                trxn.setCredit(amount);
                 trxn.setBalance(trxn.getCredit() + customerInfo.getBalance());
                 customerInfo.setBalance(trxn.getBalance());
             }
             else if (opType == Util.DEBIT_TRXN_TYPE) {
-                if (opValue > customerInfo.getBalance()) {
+                if (amount > customerInfo.getBalance()) {
                     trxn.setDebit(0);
                     trxn.setBalance(customerInfo.getBalance());
                 }
                 else {
-                    trxn.setDebit(opValue);
+                    trxn.setDebit(amount);
                     trxn.setBalance(customerInfo.getBalance() - trxn.getDebit());
                     customerInfo.setBalance(trxn.getBalance());
                 }
@@ -94,23 +91,13 @@ public class CacheServiceImpl implements CacheService {
         }
     }
 
-    //@Override
-     /*
-    This method will get transactions that occurred on a specific date for an onboarded customer.
-     */
-    public String getSpecificCacheEntry(int cacheKey, String specificEntryLookUpStr) {
-        List<TransactionDetails> transactionDetailsList = new ArrayList<>();
-        CustomerInfo customerInfo = custIdToCustomerInfoMap.get(cacheKey);
-        if (customerInfo != null) {
-            transactionDetailsList = customerInfo.getTransactionDetails();
-            transactionDetailsList = transactionDetailsList.stream().filter(trxn -> trxn.getTrxnDate().equals(specificEntryLookUpStr))
-                    .collect(Collectors.toList());
+    @Override
+    public String getLatestTrxnsForCustomer(int custId) {
+        if (custIdToCustomerInfoMap.get(custId) != null) {
+            CustomerInfo customerInfo = custIdToCustomerInfoMap.get(custId);
+
         }
-        try {
-            return Util.OBJECT_MAPPER.writeValueAsString(transactionDetailsList);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        return null;
     }
 
 
