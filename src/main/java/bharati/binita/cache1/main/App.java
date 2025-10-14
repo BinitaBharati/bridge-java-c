@@ -1,5 +1,6 @@
 package bharati.binita.cache1.main;
 
+import bharati.binita.cache1.common.helpers.CustomerTransactionWriter;
 import bharati.binita.cache1.contract.CacheService;
 import bharati.binita.cache1.impl.ffi.FFICacheServiceImpl;
 import bharati.binita.cache1.impl.offheap.OffHeapCacheServiceImpl;
@@ -8,23 +9,43 @@ import bharati.binita.cache1.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
+
 public class App {
 
     private static final Logger log = LoggerFactory.getLogger(App.class);
     //private static ExecutorService cacheBasicInfoReaderTPool ;
     //private static ExecutorService cacheBasicInfoUpdaterTPool ;
     //private static ExecutorService cacheTrxnReaderTPool ;
-    //private static ExecutorService cacheTrxnUpdaterTPool ;
+    private static ExecutorService cacheTrxnUpdaterTPool ;
 
 
     public static void main(String[] args) throws Throwable {
         log.info("started123");
         String implType = args[0];
 
-        //cacheBasicInfoReaderTPool = Executors.newFixedThreadPool(Util.BATCH_COUNT);
-        //cacheBasicInfoUpdaterTPool = Executors.newFixedThreadPool(Util.BATCH_COUNT);
-        //cacheTrxnReaderTPool = Executors.newFixedThreadPool(Util.BATCH_COUNT);
-        //cacheTrxnUpdaterTPool = Executors.newFixedThreadPool(Util.BATCH_COUNT);
+        ThreadFactory namedFactory = new ThreadFactory() {
+            private int counter = 1;
+
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread t = new Thread(r, "MyWorker-" + counter++);
+                return t;
+            }
+        };
+
+       /* cacheBasicInfoReaderTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);
+        cacheTrxnReaderTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);
+
+        cacheBasicInfoUpdaterTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);*/
+        cacheTrxnUpdaterTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);
 
         CacheService cacheService = null;
         log.info("implyTYpe = {}", implType);
@@ -43,8 +64,8 @@ public class App {
         //init cache
         cacheService.initCache();
 
-        //Map<Integer, Integer> startCustomerIdToEndCustomerId = Util.divideCustomersIntoBatches(Util.MAX_CACHE_ENTRIES,Util.BATCH_COUNT);
-        //log.info("startCustomerIdToEndCustomerId = {}",startCustomerIdToEndCustomerId);
+        Map<Integer, Integer> startCustomerIdToEndCustomerId = Util.divideCustomersIntoBatches(Util.MAX_CACHE_ENTRIES, Integer.parseInt(args[1]));
+        log.info("startCustomerIdToEndCustomerId = {}",startCustomerIdToEndCustomerId);
 
         //populateCache
         long st = System.nanoTime();
@@ -56,12 +77,24 @@ public class App {
                 log.info("Finished loading {} customers",i);
             }*/
 
-
         }
         long et = System.nanoTime();
         log.info("Loading time in millis = {}",(et-st)/1000000);//112 secs for ffi, 78 secs for pure
         log.info("finished loading all customers");
 
+
+        Iterator<Integer> startCustomerIdToEndCustomerIdItr = startCustomerIdToEndCustomerId.keySet().iterator();
+        List<Future<?>> futureList = new ArrayList<>();
+        while (startCustomerIdToEndCustomerIdItr.hasNext()) {
+            Integer startCustomerId = startCustomerIdToEndCustomerIdItr.next();
+            futureList.add(cacheTrxnUpdaterTPool.submit(new CustomerTransactionWriter(cacheService, "2000-01-01 00:00:00",startCustomerId,
+                                                                                  startCustomerIdToEndCustomerId.get(startCustomerId))));
+        }
+        for (int i = 0 ; i < futureList.size() ; i++) {
+            while (!futureList.get(i).isDone()) {
+            }
+        }
+        log.info("Done with dumping {} trxns for each of the {} customers", Util.MAX_TRXNS_PER_CUSTOMER, Util.MAX_CACHE_ENTRIES);
 
         while (true){}
 

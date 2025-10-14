@@ -1,5 +1,6 @@
 package bharati.binita.cache1.model;
 
+import bharati.binita.cache1.util.Util;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -16,12 +17,12 @@ public class CustomerInfo {
     private String homeEmail;
     private double balance;
 
-    @JsonProperty("trxns")
-    private List<TransactionDetails> transactionDetails;
-
-    public CustomerInfo() {
-        this.transactionDetails = new ArrayList<>();
+    public CustomerInfo(){
+        this.transactionDetails = new TransactionDetails[Util.MAX_TRXNS_PER_CUSTOMER];
     }
+
+    @JsonProperty("trxns")
+    private TransactionDetails[] transactionDetails;
 
     public int getId() {
         return id;
@@ -71,11 +72,22 @@ public class CustomerInfo {
         this.balance = balance;
     }
 
-    public List<TransactionDetails> getTransactionDetails() {
+    public TransactionDetails[] getTransactionDetails() {
         return transactionDetails;
     }
 
-    public void addTransactionDetails(TransactionDetails transactionDetails) {
-        this.transactionDetails.add(transactionDetails);
+    public void addTransactionDetails(TransactionDetails input) {
+        //find empty index
+        for (int i = 0 ; i < Util.MAX_TRXNS_PER_CUSTOMER ; i++) {
+            if (transactionDetails[i] == null) {
+                transactionDetails[i] = input;
+                return;
+            }
+        }
+        //no empty trxn index found
+        for (int i = 0 ; i < Util.MAX_TRXNS_PER_CUSTOMER - 1 ; i++) {
+            transactionDetails[i] = transactionDetails[i+1];
+        }
+        transactionDetails[Util.MAX_TRXNS_PER_CUSTOMER - 1] = input;
     }
 }

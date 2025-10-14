@@ -7,10 +7,7 @@ import bharati.binita.cache1.util.Util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.lang.foreign.MemorySegment;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 public class CacheServiceImpl implements CacheService {
 
@@ -51,7 +48,7 @@ public class CacheServiceImpl implements CacheService {
     /*
     This method will get basic info for a onboarded customer.
      */
-    public String getBasicCustomerInfo(int cacheKey) throws Throwable {
+    public String getBasicCustomerInfo(int cacheKey, MemorySegment buffer) throws Throwable {
         CustomerInfo customerInfo = custIdToCustomerInfoMap != null ? custIdToCustomerInfoMap.get(cacheKey) : null;
         if (customerInfo != null) {
             try {
@@ -63,7 +60,7 @@ public class CacheServiceImpl implements CacheService {
         return null;
     }
 
-    //@Override
+    @Override
     public void addTransactionEntry(int custId, long opDate, int opType, double amount) throws Throwable {
         if (custIdToCustomerInfoMap.get(custId) != null) {
             CustomerInfo customerInfo = custIdToCustomerInfoMap.get(custId);
@@ -92,13 +89,21 @@ public class CacheServiceImpl implements CacheService {
         }
     }
 
-    //@Override
-    public String getLatestTrxnsForCustomer(int custId, MemorySegment buffer) {
+    @Override
+    public String getLatestTrxnsForCustomer(int custId) {
         if (custIdToCustomerInfoMap.get(custId) != null) {
             CustomerInfo customerInfo = custIdToCustomerInfoMap.get(custId);
+
         }
         return null;
     }
 
-
+    @Override
+    public double getCustomerBalance(int custId) throws Throwable {
+        if (custIdToCustomerInfoMap.get(custId) != null) {
+            CustomerInfo customerInfo = custIdToCustomerInfoMap.get(custId);
+            return customerInfo.getBalance();
+        }
+        return -1;
+    }
 }

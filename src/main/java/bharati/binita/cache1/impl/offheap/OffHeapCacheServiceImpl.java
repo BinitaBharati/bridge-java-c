@@ -50,7 +50,7 @@ public class OffHeapCacheServiceImpl implements CacheService {
     }
 
     @Override
-    public String getBasicCustomerInfo(int custId) throws Throwable {
+    public String getBasicCustomerInfo(int custId, MemorySegment buffer) throws Throwable {
         String basicInfo = null;
         MemorySegment memorySegment = cache.get(custId);
         if (memorySegment != null) {
@@ -72,6 +72,21 @@ public class OffHeapCacheServiceImpl implements CacheService {
                 CustomerInfoFFIWriter.updateContact(memorySegment, phone, email);
             }
         }
+    }
+
+    @Override
+    public void addTransactionEntry(int custId, long trxnDate, int opType, double amount) throws Throwable {
+
+    }
+
+    @Override
+    public String getLatestTrxnsForCustomer(int custId) throws Throwable {
+        return "";
+    }
+
+    @Override
+    public double getCustomerBalance(int custId) throws Throwable {
+        return 0;
     }
 
 }

@@ -1,10 +1,7 @@
 package bharati.binita.cache1.util;
 
-import bharati.binita.cache1.model.CustomerInfo;
-import bharati.binita.cache1.model.TransactionDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -25,17 +22,19 @@ public class Util {
     public static int CREDIT_TRXN_TYPE = 0;
     public static int DEBIT_TRXN_TYPE = 1;
     public static final int MAX_CACHE_ENTRIES = 100000000;
-    public static final int BATCH_COUNT = 4;
+    public static final int MAX_TRXNS_PER_CUSTOMER = 5;
+    public static final int CUSTOMER_IDS_BATCH_COUNT = 4;
     public static Random NOT_THREAD_SAFE_RANDOM = new Random();
     public static Random THREAD_SAFE_RANDOM = ThreadLocalRandom.current();
     public static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                     .withZone(ZoneId.systemDefault());
+    public static int CUSTOMER_INFO_JSON_STR_SIZE=200;
 
     private static final String EMAIL_CHARSET = "abcdefghijklmnopqrstuvwxyz0123456789";
     private static final String[] DOMAINS = {
             "gmail.com", "yahoo.com", "outlook.com", "example.com", "hotmail.com",
-    };
+            };
 
     private static final String ALPHABET_CHARSET = "abcdefghijklmnopqrstuvwxyz";
     private static final String START_TIME = "2020-01-01 00:00:00";
