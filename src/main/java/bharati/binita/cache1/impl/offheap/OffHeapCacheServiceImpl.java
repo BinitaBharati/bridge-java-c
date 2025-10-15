@@ -65,6 +65,11 @@ public class OffHeapCacheServiceImpl implements CacheService {
     }
 
     @Override
+    public byte[] getBasicCustomerInfo2(int custId, MemorySegment buffer) throws Throwable {
+        return new byte[0];
+    }
+
+    @Override
     public void updateBasicCustomerInfo(int custId, String phone, String email) throws Throwable {
         MemorySegment memorySegment = cache.get(custId);
         if (memorySegment != null) {

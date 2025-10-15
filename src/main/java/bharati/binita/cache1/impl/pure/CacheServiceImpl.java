@@ -61,6 +61,11 @@ public class CacheServiceImpl implements CacheService {
     }
 
     @Override
+    public byte[] getBasicCustomerInfo2(int custId, MemorySegment buffer) throws Throwable {
+        return new byte[0];
+    }
+
+    @Override
     public void addTransactionEntry(int custId, long opDate, int opType, double amount) throws Throwable {
         if (custIdToCustomerInfoMap.get(custId) != null) {
             CustomerInfo customerInfo = custIdToCustomerInfoMap.get(custId);

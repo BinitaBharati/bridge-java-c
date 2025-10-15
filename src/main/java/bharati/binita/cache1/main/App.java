@@ -1,5 +1,6 @@
 package bharati.binita.cache1.main;
 
+import bharati.binita.cache1.common.helpers.CustomerBasicInfoReader;
 import bharati.binita.cache1.common.helpers.CustomerTransactionWriter;
 import bharati.binita.cache1.contract.CacheService;
 import bharati.binita.cache1.impl.ffi.FFICacheServiceImpl;
@@ -21,7 +22,7 @@ import java.util.concurrent.ThreadFactory;
 public class App {
 
     private static final Logger log = LoggerFactory.getLogger(App.class);
-    //private static ExecutorService cacheBasicInfoReaderTPool ;
+    private static ExecutorService cacheBasicInfoReaderTPool ;
     //private static ExecutorService cacheBasicInfoUpdaterTPool ;
     //private static ExecutorService cacheTrxnReaderTPool ;
     private static ExecutorService cacheTrxnUpdaterTPool ;
@@ -41,8 +42,8 @@ public class App {
             }
         };
 
-       /* cacheBasicInfoReaderTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);
-        cacheTrxnReaderTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);
+       cacheBasicInfoReaderTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);
+        /*cacheTrxnReaderTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);
 
         cacheBasicInfoUpdaterTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);*/
         cacheTrxnUpdaterTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);
@@ -64,8 +65,15 @@ public class App {
         //init cache
         cacheService.initCache();
 
-        Map<Integer, Integer> startCustomerIdToEndCustomerId = Util.divideCustomersIntoBatches(Util.MAX_CACHE_ENTRIES, Integer.parseInt(args[1]));
+        Map<Integer, Integer> startCustomerIdToEndCustomerId = Util.divideCustomersIntoBatches(Util.MAX_CACHE_ENTRIES, Util.CUSTOMER_IDS_BATCH_COUNT);
         log.info("startCustomerIdToEndCustomerId = {}",startCustomerIdToEndCustomerId);
+
+        Iterator<Integer> startCustomerIdToEndCustomerIdItr = startCustomerIdToEndCustomerId.keySet().iterator();
+        while (startCustomerIdToEndCustomerIdItr.hasNext()) {
+            Integer startCustomerId = startCustomerIdToEndCustomerIdItr.next();
+            //readers can start reading even though customers are not onboarded.
+            cacheBasicInfoReaderTPool.submit(new CustomerBasicInfoReader(cacheService, startCustomerId, startCustomerIdToEndCustomerId.get(startCustomerId)));
+        }
 
         //populateCache
         long st = System.nanoTime();
@@ -83,7 +91,7 @@ public class App {
         log.info("finished loading all customers");
 
 
-        Iterator<Integer> startCustomerIdToEndCustomerIdItr = startCustomerIdToEndCustomerId.keySet().iterator();
+        startCustomerIdToEndCustomerIdItr = startCustomerIdToEndCustomerId.keySet().iterator();
         List<Future<?>> futureList = new ArrayList<>();
         while (startCustomerIdToEndCustomerIdItr.hasNext()) {
             Integer startCustomerId = startCustomerIdToEndCustomerIdItr.next();
@@ -96,7 +104,7 @@ public class App {
         }
         log.info("Done with dumping {} trxns for each of the {} customers", Util.MAX_TRXNS_PER_CUSTOMER, Util.MAX_CACHE_ENTRIES);
 
-        while (true){}
+        //while (true){}
 
         /*Iterator<Integer> startCustomerIdToEndCustomerIdItr = startCustomerIdToEndCustomerId.keySet().iterator();
         while (startCustomerIdToEndCustomerIdItr.hasNext()) {

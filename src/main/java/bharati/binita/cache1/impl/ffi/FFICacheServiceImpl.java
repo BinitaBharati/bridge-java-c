@@ -1,17 +1,30 @@
 package bharati.binita.cache1.impl.ffi;
 
+import bharati.binita.cache1.common.helpers.CustomerTransactionWriter;
 import bharati.binita.cache1.contract.CacheService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class FFICacheServiceImpl implements CacheService {
     private static boolean isLoaded;
     private static final Linker linker = Linker.nativeLinker();
     private static final SymbolLookup lookup = SymbolLookup.loaderLookup();
     public static final int CUSTOMER_INFO_JSON_STR_SIZE = 200;//should be same as the size of son string returned by C code.Unit in bytes
-    public static final int CUSTOMER_TRXN_INFO_JSON_STR_SIZE = 1300;//should be same as the size of son string returned by C code.Unit in bytes
+    public static final int CUSTOMER_TRXN_INFO_JSON_STR_SIZE = 600;//should be same as the size of son string returned by C code.Unit in bytes
+    /**
+     * ThreadLocal maintains a map of values, one per thread.
+     *
+     * The lambda () -> new byte[...] is called once per thread, the first time that thread calls .get().
+     *
+     * After that, each thread sees its own array every time it calls .get().
+     * So, if you are handling multiple customer ids in a thread, then you must clear CUSTOMER_INFO_JSON_STR_BUFFER (set all bytes to 0)
+     * for every custId call.
+     */
     private final ThreadLocal<byte[]> CUSTOMER_INFO_JSON_STR_BUFFER =
             ThreadLocal.withInitial(() -> new byte[CUSTOMER_INFO_JSON_STR_SIZE]);
 
@@ -22,6 +35,9 @@ public class FFICacheServiceImpl implements CacheService {
     private static  MethodHandle addCustomerTransaction;
     private static  MethodHandle getCustomerLatestTransactions;
     private static  MethodHandle lookUpCustomerBalance;
+
+    private static final Logger log = LoggerFactory.getLogger(FFICacheServiceImpl.class);
+
 
     public FFICacheServiceImpl(String sharedLibRef) {
         if (!isLoaded) {
@@ -114,14 +130,20 @@ public class FFICacheServiceImpl implements CacheService {
     public String getBasicCustomerInfo(int custId, MemorySegment buffer) throws Throwable {
 
             byte[] result = getBasicCustomerInfo2(custId, buffer);
-            for (int i = 0  ; i < result.length ; i++) {
-
+            int nullTerminatorIndex = 0;
+            for (int j = 0 ; j < result.length ; j++) {
+                nullTerminatorIndex = j;
+                if (result[j] == 0) {//NULL terminator index
+                    break;
+                }
             }
-            //return new String(bytes, 0, i, StandardCharsets.UTF_8);
-        return null;
+            if (nullTerminatorIndex == 0) {
+                return null;
+            }
+            return new String(result, 0, nullTerminatorIndex, StandardCharsets.UTF_8);
     }
 
-    //@Override
+    @Override
     public byte[] getBasicCustomerInfo2(int custId, MemorySegment buffer) throws Throwable {
         buffer.fill((byte) 0);
 
@@ -132,15 +154,8 @@ public class FFICacheServiceImpl implements CacheService {
          * Here, Java itself is owner of the buffer, and JVM will take care of freeing up memory used by it.
          */
         getBasicCacheEntry.invoke(custId, buffer);
-
-        // Read null-terminated UTF-8 string from native buffer
-            /* byte[] bytes = buffer.toArray(ValueLayout.JAVA_BYTE);
-            int length = 0;
-            while (length < bytes.length && bytes[length] != 0) {
-            length++;
-            }
-            return new String(bytes, 0, length, StandardCharsets.UTF_8);*/
         byte[] bytes = CUSTOMER_INFO_JSON_STR_BUFFER.get();
+        Arrays.fill(bytes, (byte) 0);
         int i = 0;
         while (i < bytes.length) {
             byte b = buffer.get(ValueLayout.JAVA_BYTE, i);

@@ -23,7 +23,7 @@ public class Util {
     public static int DEBIT_TRXN_TYPE = 1;
     public static final int MAX_CACHE_ENTRIES = 100000000;
     public static final int MAX_TRXNS_PER_CUSTOMER = 5;
-    public static final int CUSTOMER_IDS_BATCH_COUNT = 4;
+    public static final int CUSTOMER_IDS_BATCH_COUNT = 10;
     public static Random NOT_THREAD_SAFE_RANDOM = new Random();
     public static Random THREAD_SAFE_RANDOM = ThreadLocalRandom.current();
     public static final DateTimeFormatter FORMATTER =
@@ -37,8 +37,6 @@ public class Util {
             };
 
     private static final String ALPHABET_CHARSET = "abcdefghijklmnopqrstuvwxyz";
-    private static final String START_TIME = "2020-01-01 00:00:00";
-    private static final String END_TIME = "2025-01-01 00:00:00";
 
     public static String generateRandomString(int length) {
         StringBuilder sb = new StringBuilder(length);
@@ -48,7 +46,6 @@ public class Util {
         }
         return sb.toString();
     }
-
 
     public static String generateRandomEmail(int maxLength) {
         Random random = new Random();
@@ -131,6 +128,4 @@ public class Util {
         }
         return batchStartToBatchEndMap;
     }
-
-
 }
