@@ -1,6 +1,7 @@
 package bharati.binita.cache1.main;
 
 import bharati.binita.cache1.common.helpers.CustomerBasicInfoReader;
+import bharati.binita.cache1.common.helpers.CustomerBasicInfoReaderCumUpdater;
 import bharati.binita.cache1.common.helpers.CustomerTransactionWriter;
 import bharati.binita.cache1.contract.CacheService;
 import bharati.binita.cache1.impl.ffi.FFICacheServiceImpl;
@@ -23,7 +24,7 @@ public class App {
 
     private static final Logger log = LoggerFactory.getLogger(App.class);
     private static ExecutorService cacheBasicInfoReaderTPool ;
-    //private static ExecutorService cacheBasicInfoUpdaterTPool ;
+    private static ExecutorService cacheBasicInfoUpdaterTPool ;
     //private static ExecutorService cacheTrxnReaderTPool ;
     private static ExecutorService cacheTrxnUpdaterTPool ;
 
@@ -43,9 +44,9 @@ public class App {
         };
 
        cacheBasicInfoReaderTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);
-        /*cacheTrxnReaderTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);
+        /*cacheTrxnReaderTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);*/
 
-        cacheBasicInfoUpdaterTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);*/
+        cacheBasicInfoUpdaterTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);
         cacheTrxnUpdaterTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);
 
         CacheService cacheService = null;
@@ -75,20 +76,25 @@ public class App {
             cacheBasicInfoReaderTPool.submit(new CustomerBasicInfoReader(cacheService, startCustomerId, startCustomerIdToEndCustomerId.get(startCustomerId)));
         }
 
+
+        startCustomerIdToEndCustomerIdItr = startCustomerIdToEndCustomerId.keySet().iterator();
+        while (startCustomerIdToEndCustomerIdItr.hasNext()) {
+            Integer startCustomerId = startCustomerIdToEndCustomerIdItr.next();
+            //updaters can attempt reading/updating even though customers are not onboarded.
+            cacheBasicInfoUpdaterTPool.submit(new CustomerBasicInfoReaderCumUpdater(cacheService, startCustomerId, startCustomerIdToEndCustomerId.get(startCustomerId)));
+        }
+
         //populateCache
         long st = System.nanoTime();
         log.info("started loading all customers");
         for (int i = 1 ; i <= Util.MAX_CACHE_ENTRIES ; i++) {
             cacheService.onboardCustomer(i,Util.generateRandomString(Util.MAX_NAME_CHARS),Util.generateRandomString(Util.MAX_NAME_CHARS),Util.generateUSPhoneNumber(Util.MAX_PHONE_CHARS),
                                          Util.generateRandomEmail(Util.MAX_EMAIL_CHARS),Util.NOT_THREAD_SAFE_RANDOM.nextDouble(1000, 100000000));
-            /*if (i % 1000 == 0) {
-                log.info("Finished loading {} customers",i);
-            }*/
 
         }
         long et = System.nanoTime();
         log.info("Loading time in millis = {}",(et-st)/1000000);//112 secs for ffi, 78 secs for pure
-        log.info("finished loading all customers");
+        log.info("All customers onboarded!!");
 
 
         startCustomerIdToEndCustomerIdItr = startCustomerIdToEndCustomerId.keySet().iterator();

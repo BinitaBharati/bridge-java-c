@@ -13,7 +13,9 @@ public class CustomerInfo {
     private int id;
     private String name;
     private String lastName;
+    @JsonProperty("phone")
     private String homePhone;
+    @JsonProperty("email")
     private String homeEmail;
     private double balance;
 

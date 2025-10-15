@@ -140,7 +140,7 @@ public class FFICacheServiceImpl implements CacheService {
             if (nullTerminatorIndex == 0) {
                 return null;
             }
-            return new String(result, 0, nullTerminatorIndex, StandardCharsets.UTF_8);
+            return new String(result, 0, nullTerminatorIndex, StandardCharsets.UTF_8);//Will this turn to be costly ?
     }
 
     @Override

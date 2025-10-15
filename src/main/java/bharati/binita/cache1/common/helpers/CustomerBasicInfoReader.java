@@ -49,14 +49,14 @@ public class CustomerBasicInfoReader implements Runnable{
                 int processedCount = 0;
                 for (int i = startCustomerId ; i <= endCustomerId ; i++) {
                     long st = System.nanoTime();
-                    if (processedCount > 0 && processedCount%1000000 == 0) {
-                        String custInfo = this.cacheService.getBasicCustomerInfo(i, threadLocalBuffer.get());
-                        log.info("custId = {}, custInfo = {}",i, custInfo);
-                    }
-                    else {
-                        this.cacheService.getBasicCustomerInfo2(i, threadLocalBuffer.get());
-                    }
+                    //if (processedCount > 0 && processedCount%1000000 == 0) {
+                    String custInfo = this.cacheService.getBasicCustomerInfo(i, threadLocalBuffer.get());
+                    long et = System.nanoTime();
                     processedCount++;
+                    if (processedCount > 0 && processedCount%1000000 == 0){
+                        log.info("custId = {}, custInfo = {}",i, custInfo);
+                        log.info("custId = {}, lookup time ms = {}",i, (et-st)/1000000);
+                    }
                 }
                 Thread.sleep(1*60*1000);
             } catch (Throwable e) {
