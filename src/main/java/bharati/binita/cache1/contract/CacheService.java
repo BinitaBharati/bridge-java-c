@@ -64,7 +64,7 @@ public interface CacheService {
 
     public void addTransactionEntry(int custId, long trxnDate, int opType, double amount) throws Throwable;
 
-    public String getLatestTrxnsForCustomer(int custId) throws Throwable;
+    public String getLatestTrxnsForCustomer(int custId, MemorySegment buffer) throws Throwable;
 
     public double getCustomerBalance(int custId) throws Throwable;
 }

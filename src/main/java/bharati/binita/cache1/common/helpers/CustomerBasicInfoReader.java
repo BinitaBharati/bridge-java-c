@@ -55,7 +55,7 @@ public class CustomerBasicInfoReader implements Runnable{
                     processedCount++;
                     if (processedCount > 0 && processedCount%1000000 == 0){
                         log.info("custId = {}, custInfo = {}",i, custInfo);
-                        log.info("custId = {}, lookup time ms = {}",i, (et-st)/1000000);
+                        log.info("custId = {}, lookupTime ns = {}, lookupTime ms = {}",i, (et-st),(et-st)/1000000);
                     }
                 }
                 Thread.sleep(1*60*1000);

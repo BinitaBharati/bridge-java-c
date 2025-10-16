@@ -95,7 +95,7 @@ public class CacheServiceImpl implements CacheService {
     }
 
     @Override
-    public String getLatestTrxnsForCustomer(int custId) {
+    public String getLatestTrxnsForCustomer(int custId, MemorySegment buffer) {
         if (custIdToCustomerInfoMap.get(custId) != null) {
             CustomerInfo customerInfo = custIdToCustomerInfoMap.get(custId);
 

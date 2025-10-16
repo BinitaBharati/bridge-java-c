@@ -33,39 +33,44 @@ public class CustomerTransactionWriter implements Runnable {
     }
 
     public void startDumpingCustomerTrxns() throws InterruptedException {
+        int totalDumpedTrxnsAcrossCustomersTillNow = 0;
+        while (true) {
             try {
-                for (int j = 0 ; j < Util.MAX_TRXNS_PER_CUSTOMER ; j++) {
-                    log.info("Started dumping of {} trxns for custId {} to {}",j+1,startCustomerId, endCustomerId);
-                    int totalDumpedTrxnsAcrossCustomersPerIteration = 0;
                     for (int i = startCustomerId ; i <= endCustomerId ; i++) {
+                        long st = -1, et = -1;
                         long trxnDate = Util.randomTimestampWithinOneDay(startDate);
                         double balance = cacheService.getCustomerBalance(i);
                         if (balance != -1) {//customer with id found in cache
                             boolean isCreditOp = Util.THREAD_SAFE_RANDOM.nextBoolean();
                             if (isCreditOp) {
+                                st = System.nanoTime();
                                 cacheService.addTransactionEntry(i, trxnDate, Util.CREDIT_TRXN_TYPE, Util.THREAD_SAFE_RANDOM.nextDouble(100, 100000000));
-                                totalDumpedTrxnsAcrossCustomersPerIteration++;
+                                et = System.nanoTime();
+                                totalDumpedTrxnsAcrossCustomersTillNow++;
+                                if(totalDumpedTrxnsAcrossCustomersTillNow%1000000 == 0) {
+                                    log.info("custId = {}, trxnUpdateTime in ns = {}, trxnUpdateTime in ms = {} ",i,(et-st),(et-st)/1000000);
+                                }
                             }
                             else {
                                 double debitAmount = Util.THREAD_SAFE_RANDOM.nextDouble(0, balance);
                                 if (debitAmount > 0) {
+                                    st = System.nanoTime();
                                     cacheService.addTransactionEntry(i, trxnDate, Util.DEBIT_TRXN_TYPE, debitAmount);
-                                    totalDumpedTrxnsAcrossCustomersPerIteration++;
+                                    et = System.nanoTime();
+                                    totalDumpedTrxnsAcrossCustomersTillNow++;
+                                    if(totalDumpedTrxnsAcrossCustomersTillNow%1000000 == 0) {
+                                        log.info("custId = {}, trxnUpdateTime in ns = {}, trxnUpdateTime in ms = {} ",i,(et-st),(et-st)/1000000);
+                                    }
                                 }
                             }
-                            /*if (totalDumpedTrxnsAcrossCustomersPerIteration > 0 && totalDumpedTrxnsAcrossCustomersPerIteration%1000000 == 0) {
-                                log.info("Finished dumping {} trxns between custIds {} to {}",totalDumpedTrxnsAcrossCustomersPerIteration, startCustomerId, i);
-                                log.info("Last processed customer has id = {}, with balance = {}",i, balance);
-                            }*/
                         }
-                    }
-                    log.info("Completed dumping of {} trxns for custId {} to {}",j+1,startCustomerId, endCustomerId);
-                }
 
-                Thread.sleep(1*60*1000);
-                startDate = startDate.plusDays(1);
+                    }
+                    Thread.sleep(1*60*1000);
+                    startDate = startDate.plusDays(1);
             } catch (Throwable t) {
                 log.error("Exception while dumping customers",t);
             }
+        }
     }
 }

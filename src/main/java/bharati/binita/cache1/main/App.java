@@ -2,6 +2,7 @@ package bharati.binita.cache1.main;
 
 import bharati.binita.cache1.common.helpers.CustomerBasicInfoReader;
 import bharati.binita.cache1.common.helpers.CustomerBasicInfoReaderCumUpdater;
+import bharati.binita.cache1.common.helpers.CustomerTransactionReader;
 import bharati.binita.cache1.common.helpers.CustomerTransactionWriter;
 import bharati.binita.cache1.contract.CacheService;
 import bharati.binita.cache1.impl.ffi.FFICacheServiceImpl;
@@ -25,7 +26,7 @@ public class App {
     private static final Logger log = LoggerFactory.getLogger(App.class);
     private static ExecutorService cacheBasicInfoReaderTPool ;
     private static ExecutorService cacheBasicInfoUpdaterTPool ;
-    //private static ExecutorService cacheTrxnReaderTPool ;
+    private static ExecutorService cacheTrxnReaderTPool ;
     private static ExecutorService cacheTrxnUpdaterTPool ;
 
 
@@ -43,8 +44,8 @@ public class App {
             }
         };
 
-       cacheBasicInfoReaderTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);
-        /*cacheTrxnReaderTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);*/
+        cacheBasicInfoReaderTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);
+        cacheTrxnReaderTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);
 
         cacheBasicInfoUpdaterTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);
         cacheTrxnUpdaterTPool = Executors.newFixedThreadPool(Integer.parseInt(args[1]), namedFactory);
@@ -76,6 +77,12 @@ public class App {
             cacheBasicInfoReaderTPool.submit(new CustomerBasicInfoReader(cacheService, startCustomerId, startCustomerIdToEndCustomerId.get(startCustomerId)));
         }
 
+        startCustomerIdToEndCustomerIdItr = startCustomerIdToEndCustomerId.keySet().iterator();
+        while (startCustomerIdToEndCustomerIdItr.hasNext()) {
+            Integer startCustomerId = startCustomerIdToEndCustomerIdItr.next();
+            //readers can start reading even though customers are not onboarded.
+            cacheTrxnReaderTPool.submit(new CustomerTransactionReader(cacheService, startCustomerId, startCustomerIdToEndCustomerId.get(startCustomerId)));
+        }
 
         startCustomerIdToEndCustomerIdItr = startCustomerIdToEndCustomerId.keySet().iterator();
         while (startCustomerIdToEndCustomerIdItr.hasNext()) {
@@ -84,7 +91,14 @@ public class App {
             cacheBasicInfoUpdaterTPool.submit(new CustomerBasicInfoReaderCumUpdater(cacheService, startCustomerId, startCustomerIdToEndCustomerId.get(startCustomerId)));
         }
 
-        //populateCache
+        startCustomerIdToEndCustomerIdItr = startCustomerIdToEndCustomerId.keySet().iterator();
+        while (startCustomerIdToEndCustomerIdItr.hasNext()) {
+            Integer startCustomerId = startCustomerIdToEndCustomerIdItr.next();
+            //updaters can attempt reading/updating even though customers are not onboarded.
+            cacheTrxnUpdaterTPool.submit(new CustomerTransactionWriter(cacheService, "2000-01-01 00:00:00",startCustomerId,
+                                                                       startCustomerIdToEndCustomerId.get(startCustomerId)));
+        }
+        //onboard customers
         long st = System.nanoTime();
         log.info("started loading all customers");
         for (int i = 1 ; i <= Util.MAX_CACHE_ENTRIES ; i++) {
@@ -95,48 +109,5 @@ public class App {
         long et = System.nanoTime();
         log.info("Loading time in millis = {}",(et-st)/1000000);//112 secs for ffi, 78 secs for pure
         log.info("All customers onboarded!!");
-
-
-        startCustomerIdToEndCustomerIdItr = startCustomerIdToEndCustomerId.keySet().iterator();
-        List<Future<?>> futureList = new ArrayList<>();
-        while (startCustomerIdToEndCustomerIdItr.hasNext()) {
-            Integer startCustomerId = startCustomerIdToEndCustomerIdItr.next();
-            futureList.add(cacheTrxnUpdaterTPool.submit(new CustomerTransactionWriter(cacheService, "2000-01-01 00:00:00",startCustomerId,
-                                                                                  startCustomerIdToEndCustomerId.get(startCustomerId))));
-        }
-        for (int i = 0 ; i < futureList.size() ; i++) {
-            while (!futureList.get(i).isDone()) {
-            }
-        }
-        log.info("Done with dumping {} trxns for each of the {} customers", Util.MAX_TRXNS_PER_CUSTOMER, Util.MAX_CACHE_ENTRIES);
-
-        //while (true){}
-
-        /*Iterator<Integer> startCustomerIdToEndCustomerIdItr = startCustomerIdToEndCustomerId.keySet().iterator();
-        while (startCustomerIdToEndCustomerIdItr.hasNext()) {
-            Integer startCustomerId = startCustomerIdToEndCustomerIdItr.next();
-            cacheBasicInfoReaderTPool.submit(new CustomerBasicInfoReader(cacheService, startCustomerId, startCustomerIdToEndCustomerId.get(startCustomerId)));
-        }
-
-        startCustomerIdToEndCustomerIdItr = startCustomerIdToEndCustomerId.keySet().iterator();
-        while (startCustomerIdToEndCustomerIdItr.hasNext()) {
-            Integer startCustomerId = startCustomerIdToEndCustomerIdItr.next();
-            cacheTrxnReaderTPool.submit(new CustomerTransactionReader(cacheService, startCustomerId, startCustomerIdToEndCustomerId.get(startCustomerId)));
-        }*/
-
-
-
-        //update populated basic customer info
-        /*startCustomerIdToEndCustomerIdItr = startCustomerIdToEndCustomerId.keySet().iterator();
-        while (startCustomerIdToEndCustomerIdItr.hasNext()) {
-            Integer startCustomerId = startCustomerIdToEndCustomerIdItr.next();
-            cacheBasicInfoUpdaterTPool.submit(new CustomerBasicInfoUpdater(cacheService, startCustomerId, startCustomerIdToEndCustomerId.get(startCustomerId)));
-        }
-
-        startCustomerIdToEndCustomerIdItr = startCustomerIdToEndCustomerId.keySet().iterator();
-        while (startCustomerIdToEndCustomerIdItr.hasNext()) {
-            Integer startCustomerId = startCustomerIdToEndCustomerIdItr.next();
-            cacheTrxnUpdaterTPool.submit(new CustomerTransactionWriter(cacheService, "2000-01-01 00:00:00", startCustomerId, startCustomerIdToEndCustomerId.get(startCustomerId)));
-        }*/
     }
 }

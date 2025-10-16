@@ -51,8 +51,9 @@ public class CustomerBasicInfoReaderCumUpdater implements Runnable{
                             log.info("custId = {}, lookedUp info = {}",i,custInfoOld);
                             log.info("custId = {}, email {} updated to {}, phone = {} updated to {}",i, customerInfo.getHomeEmail(), email,
                                      customerInfo.getHomePhone(), phone);
-                            log.info("custId = {}, lookUpTime = {}",i,(et1-st1)/1000000);
-                            log.info("custId = {}, updateTime = {}",i,(et2-st2)/1000000);
+                            log.info("custId = {}, lookupTime ns = {}, lookupTime ms = {}",i, (et1-st1),(et1-st1)/1000000);
+                            log.info("custId = {}, updateTime ns = {}, updateTime ms = {}",i, (et2-st2),(et2-st2)/1000000);
+
                         }
                     }
                 }

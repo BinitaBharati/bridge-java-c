@@ -85,7 +85,7 @@ public class OffHeapCacheServiceImpl implements CacheService {
     }
 
     @Override
-    public String getLatestTrxnsForCustomer(int custId) throws Throwable {
+    public String getLatestTrxnsForCustomer(int custId, MemorySegment buffer) throws Throwable {
         return "";
     }
 

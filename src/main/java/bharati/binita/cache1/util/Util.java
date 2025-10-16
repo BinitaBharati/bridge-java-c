@@ -30,6 +30,8 @@ public class Util {
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                     .withZone(ZoneId.systemDefault());
     public static int CUSTOMER_INFO_JSON_STR_SIZE=200;
+    public static int CUSTOMER_TRXN_INFO_JSON_STR_SIZE=600;
+
 
     private static final String EMAIL_CHARSET = "abcdefghijklmnopqrstuvwxyz0123456789";
     private static final String[] DOMAINS = {

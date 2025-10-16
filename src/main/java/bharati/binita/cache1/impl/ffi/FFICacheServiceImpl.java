@@ -27,6 +27,8 @@ public class FFICacheServiceImpl implements CacheService {
      */
     private final ThreadLocal<byte[]> CUSTOMER_INFO_JSON_STR_BUFFER =
             ThreadLocal.withInitial(() -> new byte[CUSTOMER_INFO_JSON_STR_SIZE]);
+    private final ThreadLocal<byte[]> CUSTOMER_TRXN_INFO_JSON_STR_BUFFER =
+            ThreadLocal.withInitial(() -> new byte[CUSTOMER_TRXN_INFO_JSON_STR_SIZE]);
 
     private static  MethodHandle initHashTable;
     private static  MethodHandle onboardCustomer;
@@ -201,27 +203,23 @@ public class FFICacheServiceImpl implements CacheService {
     }
 
     @Override
-    public String getLatestTrxnsForCustomer(int custId) throws Throwable{
-        try (Arena arena = Arena.ofConfined()) {
-            int bufferSize = CUSTOMER_TRXN_INFO_JSON_STR_SIZE;
-            MemorySegment buffer = arena.allocate(bufferSize);
-
-            /**
-             * We are sending empty buffer from Java , and C will only fill it. This is to ensure that
-             * C does not have to worry about when to free a string that C otherwise would have to return to Java.
-             *
-             * Here, Java itself is owner of the buffer, and JVM will take care of freeing up memory used by it.
-             */
-            getCustomerLatestTransactions.invoke(custId, buffer);
-
-            // Read null-terminated UTF-8 string from native buffer
-            byte[] bytes = buffer.toArray(ValueLayout.JAVA_BYTE);
-            int length = 0;
-            while (length < bytes.length && bytes[length] != 0) {
-                length++;
-            }
-            return new String(bytes, 0, length, StandardCharsets.UTF_8);
+    public String getLatestTrxnsForCustomer(int custId, MemorySegment buffer) throws Throwable{
+        /**
+         * We are sending empty buffer from Java , and C will only fill it. This is to ensure that
+         * C does not have to worry about when to free a string that C otherwise would have to return to Java.
+         *
+         * Here, Java itself is owner of the buffer, and JVM will take care of freeing up memory used by it.
+         */
+        byte[] bytes = CUSTOMER_TRXN_INFO_JSON_STR_BUFFER.get();
+        Arrays.fill(bytes, (byte) 0);
+        int i = 0;
+        while (i < bytes.length) {
+            byte b = buffer.get(ValueLayout.JAVA_BYTE, i);
+            if (b == 0) break;
+            bytes[i++] = b;
         }
+        if (i == 0) return null;
+        return new String(bytes, 0, i, StandardCharsets.UTF_8);
     }
 
     @Override
