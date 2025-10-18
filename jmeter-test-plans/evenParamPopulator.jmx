@@ -307,7 +307,7 @@ vars.put(&quot;custId&quot;, String.valueOf(custId))
         <TestAction guiclass="TestActionGui" testclass="TestAction" testname="AddPauseAfterEachIteration">
           <intProp name="ActionProcessor.action">1</intProp>
           <intProp name="ActionProcessor.target">0</intProp>
-          <stringProp name="ActionProcessor.duration">120000</stringProp>
+          <stringProp name="ActionProcessor.duration">60000</stringProp>
         </TestAction>
         <hashTree/>
       </hashTree>
