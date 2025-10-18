@@ -31,10 +31,15 @@ public class CustomerBasicInfoReader implements Runnable{
      *
      * Thread A again → lambda does not run → returns MemorySegment A.
      */
-    private static final ThreadLocal<MemorySegment> threadLocalBuffer = ThreadLocal.withInitial(() -> {
+    /*private static final ThreadLocal<MemorySegment> threadLocalBuffer = ThreadLocal.withInitial(() -> {
         Arena arena = Arena.ofConfined();
         return arena.allocate(Util.CUSTOMER_INFO_JSON_STR_SIZE);
-    });
+    });*/
+
+    private static final ThreadLocal<Arena> threadLocalArena = ThreadLocal.withInitial(Arena::ofConfined);
+
+    private static final ThreadLocal<MemorySegment> threadLocalBuffer =
+            ThreadLocal.withInitial(() -> threadLocalArena.get().allocate(Util.CUSTOMER_INFO_JSON_STR_SIZE));
 
     public CustomerBasicInfoReader(CacheService cacheService, int startCustomerId, int endCustomerId) {
         this.cacheService = cacheService;
@@ -49,13 +54,12 @@ public class CustomerBasicInfoReader implements Runnable{
                 int processedCount = 0;
                 for (int i = startCustomerId ; i <= endCustomerId ; i++) {
                     long st = System.nanoTime();
-                    //if (processedCount > 0 && processedCount%1000000 == 0) {
                     String custInfo = this.cacheService.getBasicCustomerInfo(i, threadLocalBuffer.get());
                     long et = System.nanoTime();
                     processedCount++;
                     if (processedCount > 0 && processedCount%1000000 == 0){
                         log.info("custId = {}, custInfo = {}",i, custInfo);
-                        log.info("custId = {}, lookupTime ns = {}, lookupTime ms = {}",i, (et-st),(et-st)/1000000);
+                        log.info("custId = {}, lookupTimeNs={}, lookupTimeMs={}",i, (et-st),(et-st)/1000000);
                     }
                 }
                 Thread.sleep(1*60*1000);

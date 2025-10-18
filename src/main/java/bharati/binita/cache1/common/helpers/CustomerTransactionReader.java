@@ -40,7 +40,7 @@ public class CustomerTransactionReader implements  Runnable{
                     readTrxnCount++;
                     if (readTrxnCount > 0 && readTrxnCount%1000000 == 0) {
                         log.info("custId = {}, latestTransactions = {}",i,custTrxnInfoStr);
-                        log.info("custId = {}, lookupTime ns = {}, lookupTime ms = {}",i, (et-st),(et-st)/1000000);
+                        log.info("custId = {}, lookupTimeNs={}, lookupTimeMs={}",i, (et-st),(et-st)/1000000);
                     }
                 }
                 Thread.sleep(1*60*1000);

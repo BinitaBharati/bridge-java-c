@@ -4,6 +4,7 @@ import bharati.binita.cache1.common.helpers.CustomerBasicInfoReader;
 import bharati.binita.cache1.common.helpers.CustomerBasicInfoReaderCumUpdater;
 import bharati.binita.cache1.common.helpers.CustomerTransactionReader;
 import bharati.binita.cache1.common.helpers.CustomerTransactionWriter;
+import bharati.binita.cache1.common.http.server.SimpleHttpServer;
 import bharati.binita.cache1.contract.CacheService;
 import bharati.binita.cache1.impl.ffi.FFICacheServiceImpl;
 import bharati.binita.cache1.impl.offheap.OffHeapCacheServiceImpl;
@@ -66,6 +67,9 @@ public class App {
 
         //init cache
         cacheService.initCache();
+
+        SimpleHttpServer simpleHttpServer = new SimpleHttpServer(cacheService);
+        simpleHttpServer.initServer();
 
         Map<Integer, Integer> startCustomerIdToEndCustomerId = Util.divideCustomersIntoBatches(Util.MAX_CACHE_ENTRIES, Util.CUSTOMER_IDS_BATCH_COUNT);
         log.info("startCustomerIdToEndCustomerId = {}",startCustomerIdToEndCustomerId);

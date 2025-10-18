@@ -59,14 +59,14 @@ public class CustomerTransactionWriter implements Runnable {
                                     et = System.nanoTime();
                                     totalDumpedTrxnsAcrossCustomersTillNow++;
                                     if(totalDumpedTrxnsAcrossCustomersTillNow%1000000 == 0) {
-                                        log.info("custId = {}, trxnUpdateTime in ns = {}, trxnUpdateTime in ms = {} ",i,(et-st),(et-st)/1000000);
+                                        log.info("custId = {}, trxnUpdateTimeNs={}, trxnUpdateTimeMs={} ",i,(et-st),(et-st)/1000000);
                                     }
                                 }
                             }
                         }
-
                     }
-                    Thread.sleep(1*60*1000);
+                log.info("Completed dumping {} trxns for custId {} to {}", totalDumpedTrxnsAcrossCustomersTillNow, startCustomerId, endCustomerId);
+                Thread.sleep(1*60*1000);
                     startDate = startDate.plusDays(1);
             } catch (Throwable t) {
                 log.error("Exception while dumping customers",t);

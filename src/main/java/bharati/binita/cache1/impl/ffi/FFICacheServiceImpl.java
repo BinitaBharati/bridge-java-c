@@ -204,12 +204,16 @@ public class FFICacheServiceImpl implements CacheService {
 
     @Override
     public String getLatestTrxnsForCustomer(int custId, MemorySegment buffer) throws Throwable{
+        buffer.fill((byte) 0);
         /**
          * We are sending empty buffer from Java , and C will only fill it. This is to ensure that
          * C does not have to worry about when to free a string that C otherwise would have to return to Java.
          *
          * Here, Java itself is owner of the buffer, and JVM will take care of freeing up memory used by it.
          */
+
+        getCustomerLatestTransactions.invoke(custId, buffer);
+
         byte[] bytes = CUSTOMER_TRXN_INFO_JSON_STR_BUFFER.get();
         Arrays.fill(bytes, (byte) 0);
         int i = 0;
