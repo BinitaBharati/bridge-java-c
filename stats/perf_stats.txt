@@ -1,0 +1,23 @@
+$ awk '{
+    line = $0
+    sub(/.*lookupTime ns = /,"",line)
+    ns = line
+    sub(/,.*$/,"",ns)
+    ns = ns + 0        # force numeric conversion
+    if (ns > 100) print $0
+}' CustomerTransactionReader.log
+2025-10-16 08:25:21.394 [MyWorker-6] INFO  b.b.c.c.h.CustomerTransactionReader - custId = 63000000, lookupTime ns = 181, lookupTime ms = 0
+2025-10-16 16:03:57.151 [MyWorker-6] INFO  b.b.c.c.h.CustomerTransactionReader - custId = 66967296, lookupTime ns = 200, lookupTime ms = 0
+2025-10-16 20:33:13.073 [MyWorker-6] INFO  b.b.c.c.h.CustomerTransactionReader - custId = 69934592, lookupTime ns = 219, lookupTime ms = 0
+2025-10-16 20:43:20.407 [MyWorker-6] INFO  b.b.c.c.h.CustomerTransactionReader - custId = 68934592, lookupTime ns = 109, lookupTime ms = 0
+2025-10-16 22:55:56.237 [MyWorker-4] INFO  b.b.c.c.h.CustomerTransactionReader - custId = 29934592, lookupTime ns = 180, lookupTime ms = 0
+2025-10-16 23:36:26.870 [MyWorker-6] INFO  b.b.c.c.h.CustomerTransactionReader - custId = 64934592, lookupTime ns = 210, lookupTime ms = 0
+
+awk '{
+    line = $0
+    sub(/.*lookupTime ms = /,"",line)
+    ns = line
+    sub(/,.*$/,"",ns)
+    ns = ns + 0        # force numeric conversion
+    if (ns > 100) print $0
+}' CustomerTransactionReader.log
